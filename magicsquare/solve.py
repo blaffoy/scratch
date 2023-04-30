@@ -6,36 +6,29 @@ from itertools import islice
 target = [[42,14,46,34],[38,15,52,31]]
 dim = len(target[0])
 
-# skip = factorial(pow(dim,2)) // factorial(dim)
 skip = 1
-
 
 def sum_to_target(target, max_element, set_size):
     """
     Returns a list of lists of integers that sum to the given target value.
     """
     result = []
-    def backtrack(start, path, total):
+    def backtrack(_target, path, total, length, start):
 
-        if total == target:
+        if total == target and length == set_size:
             result.append(path[:])
             return
 
-        if total > target:
+        if total > target or length >= set_size:
             return
 
-        if len(path) >= set_size:
-            return
-
-        for i in range(start, target+1):
+        for i in range(start, max_element+1):
             path.append(i)
-            backtrack(i, path, total+i)
+            backtrack(_target-i, path, total+i, length+1, i+1)
             path.pop()
 
-    backtrack(1, [], 0)
+    backtrack(target, [], 0, 0, 1)
     return result
-
-
 
 def consume(iterator, n):
     "Advance the iterator n-steps ahead. If n is none, consume entirely."
@@ -62,11 +55,32 @@ def try_proposal(prop):
             return False, 1
     return True, None
 
+def compose_lists(list_of_lists):
+    def backtrace(path, items, tail):
+        result = []
+        if not items:
+            print(path)
+            return path
+        if not tail:
+            for item in items:
+                result.append(path.append(item))
+            print(result)
+            return result
+        for item in items:
+            stub = path + [item]
+            backtrace(stub, tail[0], tail[1:])
+
+    backtrace([], list_of_lists[0], list_of_lists[1:])
+
+
 def generate_proposals():
-    t = target[1][0]
+    sums = []
+    for y in range(0,dim):
+        t = target[1][y]
+        sums.append(sum_to_target(t, pow(dim,2), dim))
 
 
-    return permutations(range(1,17))
+    return solns
 
 
 if __name__ == '__main__':
@@ -87,4 +101,4 @@ if __name__ == '__main__':
             print(prop)
             break
 
-        consume(propositions, step-1)
+        consume(propositions, step)
