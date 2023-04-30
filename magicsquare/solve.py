@@ -2,33 +2,57 @@ from math import factorial
 from itertools import permutations
 from itertools import islice
 
-dim = 4
-
-skip = factorial(pow(dim,2)) // factorial(dim)
 
 target = [[42,14,46,34],[38,15,52,31]]
+dim = len(target[0])
 
-proposal_1 = set(range(1,17))
+# skip = factorial(pow(dim,2)) // factorial(dim)
+skip = 1
+
+
+def sum_to_target(target, max_element, set_size):
+    """
+    Returns a list of lists of integers that sum to the given target value.
+    """
+    result = []
+    def backtrack(start, path, total):
+
+        if total == target:
+            result.append(path[:])
+            return
+
+        if total > target:
+            return
+
+        if len(path) >= set_size:
+            return
+
+        for i in range(start, target+1):
+            path.append(i)
+            backtrack(i, path, total+i)
+            path.pop()
+
+    backtrack(1, [], 0)
+    return result
+
+
 
 def consume(iterator, n):
     "Advance the iterator n-steps ahead. If n is none, consume entirely."
     # Use functions that consume iterators at C speed.
     if n is None:
         # feed the entire iterator into a zero-length deque
-        print("we should not get here")
+        prin_("we should not get here")
         collections.deque(iterator, maxlen=0)
     else:
         # advance to the empty slice starting at position n
-        print("trying to jump %d steps" % (n))
         next(islice(iterator, n, n), None)
-        print("jumped %d steps" % (n))
 
 def try_proposal(prop):
     for y in range(0,dim):
         check = sum(prop[y*dim:(y+1)*dim])
         if check != target[1][y]:
             print("prop=%s ; y = %d ; target = %d ; check = %d" % (prop, y, target[1][y], check))
-            print("returning")
             return False, skip
 
     for x in range(0,dim):
@@ -38,23 +62,29 @@ def try_proposal(prop):
             return False, 1
     return True, None
 
-count = 0
+def generate_proposals():
+    t = target[1][0]
 
-propositions = permutations(range(1,17))
 
-while True:
-    prop = next(propositions)
-    count = count+1
+    return permutations(range(1,17))
 
-    if count % 1 == 0:
-        print("prop %d: %s" % (count, prop))
 
-    result, step = try_proposal(prop)
+if __name__ == '__main__':
+    count = 0
 
-    if result:
-        print(prop)
-        break
+    propositions = generate_proposals()
 
-    print("consuming")
-    consume(propositions, step-1)
-    print("consumed")
+    while True:
+        prop = next(propositions)
+        count = count+1
+
+        if count % 100000 == 0:
+            print("prop %d: %s" % (count, prop))
+
+        result, step = try_proposal(prop)
+
+        if result:
+            print(prop)
+            break
+
+        consume(propositions, step-1)
