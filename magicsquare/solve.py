@@ -52,13 +52,11 @@ def try_proposal(prop):
     for y in range(0,dim):
         check = sum(prop[y*dim:(y+1)*dim])
         if check != target[1][y]:
-            print("prop=%s ; y = %d ; target = %d ; check = %d" % (prop, y, target[1][y], check))
             return False
 
     for x in range(0,dim):
         check = sum( [item[1] for item in enumerate(prop) if (item[0]-x) % dim == 0] )
         if check != target[0][x]:
-            print("prop=%s ; x = %d ; target = %d ; check = %d" % (prop, x, target[0][x], check))
             return False
     return True
 
@@ -94,18 +92,23 @@ def generate_proposals():
     deduped = [item for item in unfiltered if len(set(flat_map(lambda x:x, item))) == len(flat_map(lambda x:x, item))]
 
     # generate combinations that allow the inner quartets to be re-arranged
-    proposals = flat_map(reorder, deduped)
+    # proposals = flat_map(reorder, deduped)
 
-    return proposals
+    return deduped
     #return [flat_map(lambda args:args, item) for item in proposals]
 
 
 if __name__ == '__main__':
     proposals = generate_proposals()
+    output = None
 
     for prop in proposals:
-        result = try_proposal(prop)
+        for iteration in reorder(prop):
+            result = try_proposal(iteration)
 
-        if result:
-            print("SOLUTION: " + prop)
+            if result:
+                output = iteration
+                break
+        if output:
             break
+    print(output)
