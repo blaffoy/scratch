@@ -7,6 +7,24 @@ dim = len(target[0])
 
 flat_map = lambda f, xs: [y for ys in xs for y in f(ys)]
 
+def reorder(list_of_lists):
+    result = []
+
+    def backtrace(path, items, tail):
+        if not items or not tail:
+            for perm in permutations(items):
+                stub = path + list(perm)
+                result.append(stub)
+            return
+        for perm in permutations(items):
+            stub = path + list(perm)
+            backtrace(stub, tail[0], tail[1:])
+
+
+    backtrace([], list_of_lists[0], list_of_lists[1:])
+    return result
+
+
 def sum_to_target(target, max_element, set_size):
     """
     Returns a list of lists of integers that sum to the given target value.
@@ -28,7 +46,7 @@ def sum_to_target(target, max_element, set_size):
 
     backtrack(target, [], 0, 0, 1)
 
-    return flat_map(lambda x: list(permutations(x)), result)
+    return result
 
 def try_proposal(prop):
     for y in range(0,dim):
@@ -40,7 +58,7 @@ def try_proposal(prop):
     for x in range(0,dim):
         check = sum( [item[1] for item in enumerate(prop) if (item[0]-x) % dim == 0] )
         if check != target[0][x]:
-            # print("prop=%s ; x = %d ; target = %d ; check = %d" % (prop, x, target[0][x], check))
+            print("prop=%s ; x = %d ; target = %d ; check = %d" % (prop, x, target[0][x], check))
             return False
     return True
 
@@ -59,19 +77,27 @@ def compose_lists(list_of_lists):
 
     backtrace([], list_of_lists[0], list_of_lists[1:])
 
-    return [flat_map(lambda args:args, item) for item in result]
+    return result
 
 
 def generate_proposals():
+    # create a list of quartets that generate the correct sums along the x axis
     sums = []
     for y in range(0,dim):
         t = target[1][y]
         sums.append(sum_to_target(t, pow(dim,2), dim))
 
+    # compose the sums into collections of quartets of quartets
     unfiltered = compose_lists(sums)
-    proposals = [item for item in unfiltered if len(set(item)) == len(item)]
+
+    # filter out any quartets that have duplicates
+    deduped = [item for item in unfiltered if len(set(flat_map(lambda x:x, item))) == len(flat_map(lambda x:x, item))]
+
+    # generate combinations that allow the inner quartets to be re-arranged
+    proposals = flat_map(reorder, deduped)
 
     return proposals
+    #return [flat_map(lambda args:args, item) for item in proposals]
 
 
 if __name__ == '__main__':
