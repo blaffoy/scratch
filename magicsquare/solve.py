@@ -1,12 +1,11 @@
-from math import factorial
-from itertools import permutations
-from itertools import islice
+#!python
 
+from itertools import permutations
 
 target = [[42,14,46,34],[38,15,52,31]]
 dim = len(target[0])
 
-skip = 1
+flat_map = lambda f, xs: [y for ys in xs for y in f(ys)]
 
 def sum_to_target(target, max_element, set_size):
     """
@@ -28,49 +27,39 @@ def sum_to_target(target, max_element, set_size):
             path.pop()
 
     backtrack(target, [], 0, 0, 1)
-    return result
 
-def consume(iterator, n):
-    "Advance the iterator n-steps ahead. If n is none, consume entirely."
-    # Use functions that consume iterators at C speed.
-    if n is None:
-        # feed the entire iterator into a zero-length deque
-        prin_("we should not get here")
-        collections.deque(iterator, maxlen=0)
-    else:
-        # advance to the empty slice starting at position n
-        next(islice(iterator, n, n), None)
+    return flat_map(lambda x: list(permutations(x)), result)
 
 def try_proposal(prop):
     for y in range(0,dim):
         check = sum(prop[y*dim:(y+1)*dim])
         if check != target[1][y]:
             print("prop=%s ; y = %d ; target = %d ; check = %d" % (prop, y, target[1][y], check))
-            return False, skip
+            return False
 
     for x in range(0,dim):
         check = sum( [item[1] for item in enumerate(prop) if (item[0]-x) % dim == 0] )
         if check != target[0][x]:
-            print("prop=%s ; x = %d ; target = %d ; check = %d" % (prop, x, target[0][x], check))
-            return False, 1
-    return True, None
+            # print("prop=%s ; x = %d ; target = %d ; check = %d" % (prop, x, target[0][x], check))
+            return False
+    return True
 
 def compose_lists(list_of_lists):
+    result = []
     def backtrace(path, items, tail):
-        result = []
         if not items:
-            print(path)
             return path
         if not tail:
             for item in items:
-                result.append(path.append(item))
-            print(result)
+                result.append(path + [item])
             return result
         for item in items:
             stub = path + [item]
             backtrace(stub, tail[0], tail[1:])
 
     backtrace([], list_of_lists[0], list_of_lists[1:])
+
+    return [flat_map(lambda args:args, item) for item in result]
 
 
 def generate_proposals():
@@ -79,26 +68,18 @@ def generate_proposals():
         t = target[1][y]
         sums.append(sum_to_target(t, pow(dim,2), dim))
 
+    unfiltered = compose_lists(sums)
+    proposals = [item for item in unfiltered if len(set(item)) == len(item)]
 
-    return solns
+    return proposals
 
 
 if __name__ == '__main__':
-    count = 0
+    proposals = generate_proposals()
 
-    propositions = generate_proposals()
-
-    while True:
-        prop = next(propositions)
-        count = count+1
-
-        if count % 100000 == 0:
-            print("prop %d: %s" % (count, prop))
-
-        result, step = try_proposal(prop)
+    for prop in proposals:
+        result = try_proposal(prop)
 
         if result:
-            print(prop)
+            print("SOLUTION: " + prop)
             break
-
-        consume(propositions, step)
