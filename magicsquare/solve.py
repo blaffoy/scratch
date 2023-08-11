@@ -95,7 +95,6 @@ def generate_proposals():
     # proposals = flat_map(reorder, deduped)
 
     return deduped
-    #return [flat_map(lambda args:args, item) for item in proposals]
 
 
 if __name__ == '__main__':
